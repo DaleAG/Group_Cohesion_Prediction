@@ -1,0 +1,6 @@
+Overall Mean Square Error: 0.461120 
+
+Mean Square Error for Cohesion level 0: 2.658714 
+Mean Square Error for Cohesion level 1: 0.645769 
+Mean Square Error for Cohesion level 2: 0.100793 
+Mean Square Error for Cohesion level 3: 0.762604 
