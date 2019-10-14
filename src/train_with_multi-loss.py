@@ -104,8 +104,7 @@ def main():
     criterion = nn.CrossEntropyLoss().cuda()
     criterion1 = nn.MSELoss().cuda()
     criterion2 = kw_rank_loss().cuda()
-    # criterion3 = dg_hourglass_loss().cuda()
-    criterion3 = dg_hourglass_direction_loss().cuda()
+    criterion3 = dg_hourglass_loss().cuda()
     #criterion=Cross_Entropy_Sample_Weight.CrossEntropyLoss_weight().cuda()
     optimizer = torch.optim.SGD(filter(lambda p: p.requires_grad, model.parameters()), args.lr,
                                  momentum=args.momentum,
@@ -519,73 +518,6 @@ class dg_hourglass_loss(nn.Module):
                     hourglass_loss += self.hourglass(0.333, pred_score[i], 1.0)
                 elif 0.0 <= pred_score[i] < 0.33:
                     hourglass_loss += self.hourglass(0.0, pred_score[i], 1.0)
-            dg_loss += float(hourglass_loss)
-        return 0.1 * dg_loss
-
-
-class dg_hourglass_direction_loss(nn.Module):
-    def __init__(self):
-        super(dg_hourglass_direction_loss, self).__init__()
-
-    def hourglass(self, left, pred_score, right):
-        return (pred_score - left)*(right - pred_score)
-
-    def forward(self, pred_score, target_var):
-        size = pred_score.shape[0]
-        pred_score = pred_score.cpu().data.numpy()
-        hourglass_loss = 0
-        d =  1.5
-        dg_loss = 0
-        for i in range(size):
-            if target_var[i] == 0.0:
-                if pred_score[i] >= 0.6667:
-                    hourglass_loss += 3*d * self.hourglass(0.0, pred_score[i], 1.0)
-                elif 0.33 <= pred_score[i] < 0.6667:
-                    hourglass_loss += 2*d * self.hourglass(0.0, pred_score[i], 0.666)
-                elif 0.0 <= pred_score[i] < 0.33:
-                    if pred_score[i] > 0.165:
-                        hourglass_loss += d * self.hourglass(0.0, pred_score[i], 0.333)
-                    else:
-                        hourglass_loss += self.hourglass(0.0, pred_score[i], 0.333)
-
-            if 0.3 <target_var[i] <= 0.4: #lebel = 0.3333333
-                if pred_score[i] >= 0.6667:
-                    hourglass_loss += 2*d * self.hourglass(0.333, pred_score[i], 1.0)
-                elif 0.33 <= pred_score[i] < 0.66:
-                    if pred_score[i] > 0.495:
-                        hourglass_loss += d * self.hourglass(0.333, pred_score[i], 0.6667)
-                    else:
-                        hourglass_loss += self.hourglass(0.333, pred_score[i], 0.6667)
-                elif 0.0 <= pred_score[i] < 0.33:
-                    if pred_score[i] < 0.165:
-                        hourglass_loss += d * self.hourglass(0.0, pred_score[i], 0.333)
-                    else:
-                        hourglass_loss += self.hourglass(0.0, pred_score[i], 0.333)
-
-            if 0.6 <target_var[i] <= 0.7: #lebel = 0.6666666
-                if pred_score[i] >= 0.66:
-                    if pred_score[i] > 0.825:
-                        hourglass_loss += d * self.hourglass(0.6667, pred_score[i], 1.0)
-                    else:
-                        hourglass_loss += self.hourglass(0.6667, pred_score[i], 1.0)
-                elif 0.33 <= pred_score[i] < 0.66:
-                    if pred_score[i] < 0.495:
-                        hourglass_loss += d * self.hourglass(0.3333, pred_score[i], 0.6667)
-                    else:
-                        hourglass_loss += self.hourglass(0.3333, pred_score[i], 0.6667)
-                elif 0.0 <= pred_score[i] < 0.33:
-                    hourglass_loss += 2*d * self.hourglass(0.0, pred_score[i], 0.666)
-
-            if target_var[i] == 1.0:
-                if pred_score[i] >= 0.66:
-                    if pred_score[i] < 0.825:
-                        hourglass_loss += d * self.hourglass(0.666, pred_score[i], 1.0)
-                    else:
-                        hourglass_loss += self.hourglass(0.666, pred_score[i], 1.0)
-                elif 0.33 <= pred_score[i] < 0.66:
-                    hourglass_loss += 2*d * self.hourglass(0.333, pred_score[i], 1.0)
-                elif 0.0 <= pred_score[i] < 0.33:
-                    hourglass_loss += 3*d * self.hourglass(0.0, pred_score[i], 1.0)
             dg_loss += float(hourglass_loss)
         return 0.1 * dg_loss
 
